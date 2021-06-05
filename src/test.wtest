@@ -1,0 +1,92 @@
+import festival.*
+
+describe "festival" {
+
+	const hofbrau = new MarcaRoja(gramosLupulo = 1, origen = "Alemania")
+	const guiness = new MarcaNegra(gramosLupulo = 2, origen = "Belgica")
+	const jarraHofbrau = new Jarra(litros = 0.5, marca = hofbrau)
+	const fernando = new Aleman(peso = 70, escuchaMusicaTradicional = true, nivelAguante = 1)
+	const ezequiel = new Belga(peso = 100, escuchaMusicaTradicional = false, nivelAguante = 1)
+	const pablo = new Checo(peso = 110, escuchaMusicaTradicional = false, nivelAguante = 1)
+	const carpaDeHofbrau = new Carpa(limiteDePersonas = 3, tieneBanda = true, marca = hofbrau)
+	const carpaDeGuiness = new Carpa(limiteDePersonas = 2, tieneBanda = false, marca = guiness)
+	const jarraGuiness = new Jarra(litros = 1, marca = hofbrau)
+
+	fixture {
+		graduacionReglamentariaNegra.graduacion(3)
+		fernando.comprarJarra(jarraHofbrau)
+	}
+
+	test "marca roja es 1.25 de la marca de cerveza negra" {
+		assert.equals(2.5, hofbrau.graduacion())
+	}
+
+	test "marca negra con mucho lupulo, devuelve la reglamentaria" {
+		assert.equals(3, guiness.graduacion())
+	}
+
+	test "cerveza hofbrau de medio litro tiene 0.04 litros de alcohol" {
+		assert.equals(0.0125, jarraHofbrau.cantidadDeAlcohol())
+	}
+	
+	test "fernando tiene 0.0250 alcohol ingerido si compró dos jarras de hofbrau" {
+		assert.equals(0.0125, fernando.cantidadAlcoholIngerido())
+		fernando.comprarJarra(jarraHofbrau)
+		assert.equals(0.0250, fernando.cantidadAlcoholIngerido())
+	}
+	
+	test "fernando se pone ebrio con la segunda jarra de hofbrau" {
+		assert.notThat(fernando.estaEbria())
+		fernando.comprarJarra(jarraHofbrau)
+		assert.that(fernando.estaEbria())
+	}
+	
+	test "a fernando le gustan las dos marcas porque es alemen, y a ezequiel ninguna por gr de lupulo" {
+		assert.that(fernando.leGustaLaMarcaDe(carpaDeHofbrau))
+		assert.that(fernando.leGustaLaMarcaDe(carpaDeGuiness))
+		 
+		assert.notThat(ezequiel.leGustaLaMarcaDe(carpaDeHofbrau))
+		assert.notThat(ezequiel.leGustaLaMarcaDe(carpaDeGuiness))
+	}
+	
+	test "a fernando le gusta la carpa hofbrau y no la de guinnes por la musica" {
+		assert.that(fernando.coincidePreferenciaMusicalDe(carpaDeHofbrau))
+		assert.notThat(fernando.coincidePreferenciaMusicalDe(carpaDeGuiness))
+	}
+	
+	test "fernando no quiere entrar a la carpa de guiness por la música" {
+		assert.that(fernando.quiereEntrarA(carpaDeHofbrau))
+		assert.notThat(fernando.quiereEntrarA(carpaDeGuiness))
+	}
+	
+	test "fernando y ezequiel ingresan a la carpa pero pablo ya no puede" {
+		carpaDeGuiness.entraPersona(fernando)
+		carpaDeGuiness.entraPersona(ezequiel)
+		assert.throwsException({carpaDeGuiness.entraPersona(pablo)})
+	}
+
+	test "fernando puede entrar pero no quiere por la música" {
+		carpaDeGuiness.puedeIngresar(fernando)
+		assert.equals(0, carpaDeHofbrau.genteEnLaCarpa().size())
+	}
+	
+	test "en la carpa de guiness hay solo un ebrio empedernido " {
+		carpaDeGuiness.entraPersona(fernando)
+		carpaDeGuiness.entraPersona(ezequiel)
+
+		fernando.comprarJarra(jarraGuiness)
+		ezequiel.comprarJarra(jarraGuiness)
+		ezequiel.comprarJarra(jarraGuiness)
+		
+		assert.equals(2, carpaDeGuiness.todosLosEbrios().size())
+		assert.that(ezequiel.todasJarrasDe(1))
+		assert.equals(1, carpaDeGuiness.cantidadEbriosEmpedernidos())
+	}
+	
+	test "ezequiel es patriota" {
+		assert.that(ezequiel.esPatriota())
+	}
+
+
+}
+
